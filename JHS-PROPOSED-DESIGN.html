@@ -1,0 +1,735 @@
+<title>Desain Solusi JHS System</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  /* DESIGN PLAN — engineering spec-sheet identity: DIN-style display (Barlow),
+     Plex Sans body, Plex Mono for codes/data, hatch "construction tape" rules,
+     ink-navy + burnt amber on warm paper. Single column, sheets 01–10. */
+  :root {
+    --bg: #f5f4ef;
+    --panel: #fdfcfa;
+    --panel2: #ecebe3;
+    --fg: #1a2a3b;
+    --muted: #5c6b7a;
+    --line: #ddd9cf;
+    --line2: #c9c4b6;
+    --accent: #a35c12;
+    --steel: #3e5c76;
+    --ok: #2e7d4f;
+    --bad: #b3372e;
+    --chipbg: #f1efe8;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101a26;
+      --panel: #16232f;
+      --panel2: #1c2b3a;
+      --fg: #dbe5ee;
+      --muted: #93a4b4;
+      --line: #2a3948;
+      --line2: #3a4b5c;
+      --accent: #e0953f;
+      --steel: #7fa3c0;
+      --ok: #58b981;
+      --bad: #e07a6f;
+      --chipbg: #1c2b3a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101a26;
+    --panel: #16232f;
+    --panel2: #1c2b3a;
+    --fg: #dbe5ee;
+    --muted: #93a4b4;
+    --line: #2a3948;
+    --line2: #3a4b5c;
+    --accent: #e0953f;
+    --steel: #7fa3c0;
+    --ok: #58b981;
+    --bad: #e07a6f;
+    --chipbg: #1c2b3a;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font: 400 15.5px/1.65 "IBM Plex Sans", system-ui, sans-serif;
+    margin: 0;
+    padding-inline: 20px;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding-block: 36px 90px; }
+  h1, h2, h3 { text-wrap: balance; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  .hatch {
+    height: 8px;
+    border-block: 1px solid var(--line2);
+    background: repeating-linear-gradient(-45deg, var(--line2) 0 1.5px, transparent 1.5px 9px);
+  }
+
+  /* hero */
+  .hero { padding-top: 8px; }
+  .hero .eyebrow { color: var(--steel); }
+  .hero h1 {
+    font: 800 clamp(30px, 6vw, 46px)/1.06 "Barlow", "Arial Narrow", sans-serif;
+    letter-spacing: -0.015em;
+    margin: 14px 0 10px;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .deck { max-width: 62ch; color: var(--muted); font-size: 16.5px; margin: 0 0 22px; }
+  .meta {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px; background: var(--line); border: 1px solid var(--line);
+  }
+  .meta div { background: var(--panel); padding: 10px 14px; }
+  .meta dt { font: 600 10px/1 "IBM Plex Mono", monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 5px; }
+  .meta dd { margin: 0; font-size: 13.5px; font-weight: 500; }
+
+  /* toc */
+  .toc { margin-top: 26px; border: 1px solid var(--line); background: var(--panel); padding: 16px 20px 14px; }
+  .toc h2 { font: 600 11px/1 "IBM Plex Mono", monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  .toc ol { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 36px; }
+  .toc li { break-inside: avoid; margin: 0 0 7px; font-size: 13.5px; }
+  .toc a { color: var(--fg); text-decoration: none; }
+  .toc a:hover { color: var(--accent); }
+  .toc .n { font: 600 11px "IBM Plex Mono", monospace; color: var(--accent); margin-right: 9px; }
+  @media (max-width: 560px) { .toc ol { columns: 1; } }
+
+  /* sheets (sections) */
+  .sheet { margin-top: 64px; }
+  .eyebrow {
+    display: flex; align-items: baseline; gap: 10px;
+    font: 600 11px/1 "IBM Plex Mono", monospace;
+    letter-spacing: .15em; text-transform: uppercase; color: var(--muted);
+  }
+  .eyebrow b { color: var(--accent); font-weight: 600; }
+  .sheet h2 { font: 700 27px/1.15 "Barlow", "Arial Narrow", sans-serif; margin: 10px 0 4px; letter-spacing: -0.01em; }
+  .sheet h3 { font: 600 17px/1.3 "Barlow", sans-serif; margin: 26px 0 6px; }
+  .sheet p { margin: 10px 0; max-width: 70ch; }
+  .sheet p.lead { font-size: 16.5px; color: var(--fg); }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+
+  /* chips */
+  .chip {
+    display: inline-block; font: 500 11px/1.4 "IBM Plex Mono", monospace;
+    padding: 1px 8px; border: 1px solid var(--line2); border-radius: 3px;
+    background: var(--chipbg); white-space: nowrap; font-variant-numeric: tabular-nums;
+  }
+  .c-ok { color: var(--ok); border-color: var(--ok); }
+  .c-bad { color: var(--bad); border-color: var(--bad); }
+  .c-acc { color: var(--accent); border-color: var(--accent); }
+  .c-steel { color: var(--steel); border-color: var(--steel); }
+  .c-mut { color: var(--muted); }
+  /* tables */
+  .scrollx { overflow-x: auto; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  .tbl th {
+    font: 600 10.5px/1.4 "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); text-align: left; padding: 8px 12px 7px; border-bottom: 2px solid var(--line2);
+  }
+  .tbl td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .tbl td b { font-weight: 600; }
+  .tbl .mono { font: 500 12px/1.5 "IBM Plex Mono", monospace; }
+
+  /* figures / diagrams */
+  figure { margin: 22px 0; }
+  .figwrap { overflow-x: auto; border: 1px solid var(--line); background: var(--panel); padding: 14px 10px 8px; }
+  svg.dg { display: block; width: 100%; height: auto; color: var(--fg); }
+  #fig-erd svg.dg, .dg-erd { min-width: 860px; max-width: 920px; }
+  #fig-flow svg.dg { min-width: 900px; max-width: 960px; }
+  #fig-arch svg.dg { min-width: 700px; max-width: 880px; }
+  #fig-state svg.dg { min-width: 660px; max-width: 860px; }
+  #fig-ttd svg.dg { min-width: 640px; max-width: 860px; }
+  figcaption { font-size: 12.5px; color: var(--muted); margin-top: 8px; max-width: 72ch; }
+  figcaption b { color: var(--fg); font-weight: 600; }
+  .dg .nb { fill: var(--panel); stroke: var(--line2); }
+  .dg .nb-a { fill: var(--panel); stroke: var(--accent); stroke-width: 1.6; }
+  .dg .nb-d { stroke-dasharray: 4 3; }
+  .dg .grp { fill: var(--panel2); stroke: var(--line2); }
+  .dg .ed { stroke: var(--muted); fill: none; }
+  .dg .ed-a { stroke: var(--accent); fill: none; }
+  .dg .ed-d { stroke: var(--muted); fill: none; stroke-dasharray: 5 4; }
+  .dg text { font-family: "IBM Plex Sans", sans-serif; fill: var(--fg); }
+  .dg .t-grp { font: 600 10px "IBM Plex Mono", monospace; letter-spacing: .13em; fill: var(--muted); }
+  .dg .t-title { font-size: 12.5px; font-weight: 600; }
+  .dg .t-sub { font: 400 10px "IBM Plex Mono", monospace; fill: var(--muted); }
+  .dg .t-lbl { font: 500 10px "IBM Plex Mono", monospace; fill: var(--muted); }
+  .dg .t-role { font: 600 9.5px "IBM Plex Mono", monospace; letter-spacing: .1em; fill: var(--steel); }
+  .dg .t-role-a { fill: var(--accent); }
+  .dg .t-st { font: 500 9.5px "IBM Plex Mono", monospace; fill: var(--muted); }
+  .dg .mark { fill: var(--muted); }
+
+  /* module cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 18px 0 6px; }
+  .card { background: var(--panel); border: 1px solid var(--line); padding: 13px 14px 12px; }
+  .card .num { font: 700 12px "IBM Plex Mono", monospace; color: var(--accent); }
+  .card h3 { font: 600 14.5px/1.3 "Barlow", sans-serif; margin: 6px 0 4px; }
+  .card p { font-size: 12.5px; line-height: 1.55; color: var(--muted); margin: 0; }
+
+  /* note / callout */
+  .note { border-left: 3px solid var(--accent); background: var(--panel); padding: 12px 16px; margin: 16px 0; max-width: 74ch; }
+  .note p { margin: 4px 0; font-size: 14px; }
+  .note .nt { font: 600 10.5px "IBM Plex Mono", monospace; letter-spacing: .13em; text-transform: uppercase; color: var(--accent); }
+
+  /* spec strip (code breakdown) */
+  .specstrip { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+  .seg { border: 1px solid var(--line2); background: var(--panel); padding: 8px 10px 7px; min-width: 0; }
+  .seg b { display: block; font: 600 15px/1.2 "IBM Plex Mono", monospace; letter-spacing: .02em; }
+  .seg.hot b { color: var(--accent); }
+  .seg span { display: block; font-size: 10.5px; color: var(--muted); margin-top: 3px; line-height: 1.35; max-width: 110px; }
+
+  /* wireframe mockup */
+  .app { border: 1px solid var(--line2); background: var(--panel); margin: 20px 0 8px; overflow: hidden; }
+  .app-bar { display: flex; align-items: center; gap: 8px; background: var(--panel2); border-bottom: 1px solid var(--line2); padding: 8px 12px; }
+  .app-bar i { width: 9px; height: 9px; border-radius: 50%; background: var(--line2); }
+  .app-bar span { font: 500 11px "IBM Plex Mono", monospace; color: var(--muted); margin-left: 6px; }
+  .app-body { display: flex; }
+  .app-side { flex: 0 0 150px; background: var(--panel2); border-right: 1px solid var(--line); padding: 12px 0; font-size: 12.5px; }
+  .app-side a { display: block; padding: 6px 14px; color: var(--muted); text-decoration: none; }
+  .app-side a.on { color: var(--fg); background: var(--chipbg); border-right: 2px solid var(--accent); font-weight: 600; }
+  .app-main { flex: 1; min-width: 0; padding: 14px 16px 16px; }
+  .steps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .step { font: 500 11px/1 "IBM Plex Mono", monospace; padding: 5px 10px; border: 1px solid var(--line2); color: var(--muted); }
+  .step.on { border-color: var(--accent); color: var(--accent); background: var(--chipbg); font-weight: 600; }
+  .wtable { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .wtable th { font: 600 9.5px "IBM Plex Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 5px 8px; border-bottom: 1.5px solid var(--line2); }
+  .wtable td { padding: 6px 8px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  .wtable .code { font: 500 10.5px "IBM Plex Mono", monospace; white-space: nowrap; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-top: 12px; }
+  .tile { border: 1px solid var(--line); background: var(--panel2); padding: 8px 10px; }
+  .tile dt { font: 600 9.5px/1.3 "IBM Plex Mono", monospace; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .tile dd { margin: 3px 0 0; font: 600 14px/1.3 "Barlow", sans-serif; font-variant-numeric: tabular-nums; }
+  .tile.hot { border-color: var(--accent); }
+  .tile.hot dd { color: var(--accent); }
+  @media (max-width: 620px) {
+    .app-body { flex-direction: column; }
+    .app-side { flex: none; display: flex; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--line); padding: 6px; }
+    .app-side a { padding: 5px 10px; }
+    .app-side a.on { border-right: 0; border-bottom: 2px solid var(--accent); }
+  }
+
+  footer { margin-top: 70px; }
+  footer .fin { display: flex; flex-wrap: wrap; gap: 8px 26px; justify-content: space-between; padding-top: 14px; font-size: 12.5px; color: var(--muted); }
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">Dokumen Desain Solusi &nbsp;·&nbsp; Modul Penawaran &nbsp;·&nbsp; PT Saeti Beton Pracetak</div>
+  <h1>Desain Solusi<br>JHS <em>System</em></h1>
+  <p class="deck">Bagaimana sistem penawaran bekerja: dari prospek yang dicatat sales, harga yang disusun marketing, persetujuan dua lapis direksi, sampai dokumen PDF yang ditandatangani dan diarsipkan — beserta enam basis data yang menopangnya.</p>
+  <dl class="meta">
+    <div><dt>Klien</dt><dd>PT Saeti Beton Pracetak</dd></div>
+    <div><dt>Pengembang</dt><dd>Pinion</dd></div>
+    <div><dt>Ruang lingkup</dt><dd>Modul Penawaran + 6 basis data</dd></div>
+    <div><dt>Status</dt><dd>v0.1 berjalan — desain lanjutan</dd></div>
+    <div><dt>Tanggal</dt><dd>9 Oktober 2026</dd></div>
+  </dl>
+
+  <nav class="toc" aria-label="Daftar isi">
+    <h2>Isi Dokumen</h2>
+    <ol>
+      <li><a href="#s01"><span class="n">01</span>Ringkasan Solusi</a></li>
+      <li><a href="#s02"><span class="n">02</span>Arsitektur Sistem</a></li>
+      <li><a href="#s03"><span class="n">03</span>Peran &amp; Hak Akses</a></li>
+      <li><a href="#s04"><span class="n">04</span>Desain Basis Data</a></li>
+      <li><a href="#s05"><span class="n">05</span>Alur Kerja End-to-End</a></li>
+      <li><a href="#s06"><span class="n">06</span>Modul: Dokumen Penawaran</a></li>
+      <li><a href="#s07"><span class="n">07</span>Modul: Approval Workflow</a></li>
+      <li><a href="#s08"><span class="n">08</span>Modul: Tanda Tangan &amp; PDF</a></li>
+      <li><a href="#s09"><span class="n">09</span>Modul: Arsip</a></li>
+      <li><a href="#s10"><span class="n">10</span>Status &amp; Roadmap</a></li>
+    </ol>
+  </nav>
+</header>
+
+<section class="sheet" id="s01">
+  <div class="eyebrow"><b>Sheet 01</b> Ringkasan</div>
+  <h2>Satu sistem untuk seluruh alur penawaran</h2>
+  <p class="lead">JHS System mengganti proses penawaran yang tersebar di spreadsheet, WhatsApp, dan dokumen Word menjadi satu alur digital: data masuk sekali, dokumen dihasilkan dari data yang sama, dan setiap keputusan direksi terekam.</p>
+  <p>Solusi mencakup lima modul yang saling menyambung. Semuanya berdiri di atas satu basis data terpusat, sehingga angka yang muncul di PDF penawaran tidak pernah berbeda dengan angka di dashboard direktur.</p>
+  <div class="cards">
+    <div class="card"><span class="num">M1</span><h3>Pembuatan Dokumen Penawaran</h3><p>Sales mencatat prospek; marketing menyusun harga; sistem merangkai draft PDF otomatis dengan nomor dan catatan standar.</p></div>
+    <div class="card"><span class="num">M2</span><h3>Approval Workflow</h3><p>Dua lapis persetujuan: Direktur Komersial, lalu Direktur Utama. Penolakan wajib menyertakan alasan dan kembali ke marketing.</p></div>
+    <div class="card"><span class="num">M3</span><h3>Tanda Tangan Digital</h3><p>Tanda tangan PNG di profil setiap pengguna, ditempel otomatis ke halaman tanda tangan PDF final.</p></div>
+    <div class="card"><span class="num">M4</span><h3>PDF Viewer</h3><p>Draft dan final ditinjau langsung di browser — reviewer membaca dokumen yang sama dengan yang akan dikirim.</p></div>
+    <div class="card"><span class="num">M5</span><h3>Arsip</h3><p>Penawaran final, Purchase Order, dan kontrak tersimpan rapi per prospek, siap dicari kembali saat dibutuhkan.</p></div>
+  </div>
+  <div class="note"><span class="nt">Prinsip desain</span>
+  <p><b>Satu sumber kebenaran.</b> Harga produk, joint, ongkir, dan margin hidup di database — bukan di dalam dokumen. Dokumen penawaran hanyalah "cetakan" dari data tersebut pada satu titik waktu (versi), sehingga revisi menghasilkan versi baru, bukan salinan yang tidak sinkron.</p></div>
+</section>
+
+<section class="sheet" id="s02">
+  <div class="eyebrow"><b>Sheet 02</b> Arsitektur</div>
+  <h2>Arsitektur Sistem</h2>
+  <p>Tiga keputusan utama membentuk arsitektur ini:</p>
+  <p><b>1. Aplikasi web, tanpa instalasi.</b> Seluruh antarmuka berupa satu aplikasi React yang di-host di Vercel. Setiap peran masuk lewat browser — di kantor, di pabrik Cikarang/Surabaya, atau dari HP — dengan menu yang menyesuaikan perannya masing-masing.</p>
+  <p><b>2. Satu backend: Supabase.</b> Autentikasi, database PostgreSQL, dan penyimpanan berkas berada di satu layanan. Tidak ada server tambahan yang harus dirawat; akses tiap pengguna membawa token JWT dan tunduk pada aturan per tabel (row-level security).</p>
+  <p><b>3. PDF dibuat di browser.</b> Pustaka jsPDF merangkai dokumen penawaran di sisi klien. Beban server nol, hasilnya bisa langsung ditinjau, dan berkas jadinya disimpan ke Supabase Storage sebagai arsip.</p>
+
+  <figure id="fig-arch">
+    <div class="figwrap">
+    <svg class="dg" viewBox="0 0 880 336" role="img" aria-label="Diagram arsitektur: browser dengan React SPA dan jsPDF terhubung ke Supabase Auth, Postgres, dan Storage; feed kurs dan harga Brent masuk ke browser">
+      <defs>
+        <marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="mark" d="M0,0 L8,4 L0,8 z"/></marker>
+      </defs>
+      <!-- client group -->
+      <rect class="grp" x="20" y="30" width="340" height="200"/>
+      <text class="t-grp" x="34" y="52">KLIEN — BROWSER</text>
+      <rect class="nb" x="40" y="64" width="300" height="52"/>
+      <text class="t-title" x="54" y="85">React SPA (Vercel)</text>
+      <text class="t-sub" x="54" y="103">route guard per peran · menu dinamis</text>
+      <rect class="nb" x="40" y="128" width="300" height="52"/>
+      <text class="t-title" x="54" y="149">jsPDF — PDF di browser</text>
+      <text class="t-sub" x="54" y="167">draft &amp; final dirender tanpa server</text>
+      <text class="t-sub" x="54" y="212">satu aplikasi untuk 8 peran</text>
+      <!-- supabase group -->
+      <rect class="grp" x="520" y="30" width="340" height="200"/>
+      <text class="t-grp" x="534" y="52">SUPABASE — BACKEND</text>
+      <rect class="nb" x="540" y="64" width="300" height="40"/>
+      <text class="t-title" x="554" y="84">Auth — email + password</text>
+      <text class="t-sub" x="554" y="98">sesi JWT per pengguna</text>
+      <rect class="nb" x="540" y="114" width="300" height="48"/>
+      <text class="t-title" x="554" y="134">Postgres — 22 tabel</text>
+      <text class="t-sub" x="554" y="152">SLS_ · MKT_ · sqp_ · PRC_ · master</text>
+      <rect class="nb" x="540" y="172" width="300" height="44"/>
+      <text class="t-title" x="554" y="191">Storage — berkas</text>
+      <text class="t-sub" x="554" y="208">documents · ttd · avatar</text>
+      <!-- arrows -->
+      <line class="ed" x1="364" y1="88" x2="516" y2="88" marker-end="url(#ah)"/>
+      <text class="t-lbl" x="440" y="80" text-anchor="middle">login → JWT</text>
+      <line class="ed" x1="364" y1="148" x2="516" y2="148" marker-end="url(#ah)"/>
+      <text class="t-lbl" x="440" y="140" text-anchor="middle">baca-tulis data (REST)</text>
+      <line class="ed" x1="364" y1="205" x2="516" y2="205" marker-end="url(#ah)"/>
+      <text class="t-lbl" x="440" y="197" text-anchor="middle">unggah / unduh berkas</text>
+      <!-- external feeds -->
+      <rect class="grp" x="20" y="266" width="340" height="58"/>
+      <text class="t-title" x="34" y="288">Feed publik — harga acuan</text>
+      <text class="t-sub" x="34" y="306">kurs USD/IDR (Frankfurter) · harga Brent (AmericasOilWatch)</text>
+      <line class="ed-a" x1="190" y1="262" x2="190" y2="236" marker-end="url(#ah)"/>
+      <text class="t-lbl" x="200" y="254" style="fill:var(--accent)">feed harian</text>
+    </svg>
+    </div>
+    <figcaption><b>Gambar 1 — Arsitektur.</b> Browser menjalankan antarmuka dan pembuatan PDF; Supabase menampung data dan berkas; feed kurs &amp; minyak hanya menjadi acuan tren harga material di dashboard. Reset kata sandi pengguna berjalan lewat RPC di dalam Supabase.</figcaption>
+  </figure>
+</section>
+
+<section class="sheet" id="s03">
+  <div class="eyebrow"><b>Sheet 03</b> Peran</div>
+  <h2>Peran &amp; Hak Akses</h2>
+  <p class="lead">Delapan peran memakai sistem yang sama, tetapi melihat menu yang berbeda. Route guard di aplikasi memastikan setiap orang hanya membuka halaman yang menjadi tanggung jawabnya.</p>
+  <div class="scrollx">
+  <table class="tbl">
+    <thead><tr><th>Peran</th><th>Fokus</th><th>Akses utama</th><th>Peran dalam penawaran</th></tr></thead>
+    <tbody>
+      <tr><td><b>Administrator</b> <span class="chip c-mut">admin</span></td><td>Seluruh sistem</td><td>Semua modul + kelola pengguna</td><td>Menambah pengguna, mengatur ulang kata sandi, memantau semuanya</td></tr>
+      <tr><td><b>Sales</b> <span class="chip c-mut">sales</span></td><td>Prospek</td><td>Daftar Prospek, Harga Produk</td><td>Mencatat prospek baru (klien, proyek, lokasi, kebutuhan) lalu meneruskannya ke marketing</td></tr>
+      <tr><td><b>Marketing</b> <span class="chip c-mut">marketing</span></td><td>Penawaran</td><td>Penawaran, Pricing Engine, Harga Produk</td><td>Menyusun harga &amp; margin, menerbitkan draft PDF, mengajukan approval</td></tr>
+      <tr><td><b>Direktur Komersial</b> <span class="chip c-acc">cco</span></td><td>Review komersial</td><td>Daftar Penawaran (review)</td><td>Lapis persetujuan 1 — menyetujui ke tahap CEO, atau menolak dengan alasan</td></tr>
+      <tr><td><b>Direktur Utama</b> <span class="chip c-acc">ceo</span></td><td>Persetujuan final</td><td>Daftar Penawaran (final)</td><td>Lapis persetujuan 2 — pintu terakhir sebelum dokumen sah dikirim</td></tr>
+      <tr><td><b>Pengadaan</b> <span class="chip c-steel">procurement</span></td><td>Vendor &amp; harga bahan</td><td>Dashboard Pengadaan, Survey Harga, Vendor</td><td>Merawat data vendor dan hasil survey harga bahan baku</td></tr>
+      <tr><td><b>Laboratorium</b> <span class="chip c-mut">lab</span></td><td>Mix design</td><td>Modul disiapkan</td><td>Menunggu pengembangan — halaman "segera hadir" sudah tersedia</td></tr>
+      <tr><td><b>QC</b> <span class="chip c-mut">qc</span></td><td>Mutu produksi</td><td>Modul disiapkan</td><td>Menunggu pengembangan — halaman "segera hadir" sudah tersedia</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="small muted">Setiap peran juga memiliki halaman <b>Profil</b> untuk data diri, foto, dan unggahan tanda tangan digital (dipakai di Sheet 08).</p>
+</section>
+
+<section class="sheet" id="s04">
+  <div class="eyebrow"><b>Sheet 04</b> Basis Data</div>
+  <h2>Desain Basis Data — enam domain</h2>
+  <p class="lead">Kebutuhan enam database (material, produk, vendor/klien, pengguna, proyek, surat) dijawab dengan satu PostgreSQL yang tertata dalam enam domain. Awalan nama tabel menandai domainnya: <span class="chip c-mut">SLS_</span> penjualan, <span class="chip c-mut">MKT_</span> penawaran, <span class="chip c-mut">sqp_</span> produk &amp; costing, <span class="chip c-mut">PRC_</span> pengadaan, sisanya master data.</p>
+  <p>Satu catatan pemisahan istilah: <b>klien</b> (pemilik proyek yang membeli tiang) disimpan di <span class="chip c-mut">SLS_clients</span>, sedangkan <b>vendor</b> (pemasok bahan baku) disimpan di <span class="chip c-mut">PRC_vendors</span> — keduanya tidak dicampur.</p>
+
+  <figure id="fig-erd">
+    <div class="figwrap">
+    <svg class="dg dg-erd" viewBox="0 0 940 632" role="img" aria-label="Peta relasi basis data: leads sebagai poros tengah terhubung ke klien, proyek, stakeholder, arsip, produk, dan penawaran; penawaran terhubung ke approval; produk terhubung ke joint dan BOQ; survey harga menghubungkan vendor dan material">
+      <defs>
+        <marker id="ah2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="mark" d="M0,0 L8,4 L0,8 z"/></marker>
+      </defs>
+      <!-- row 1 -->
+      <rect class="nb" x="150" y="30" width="200" height="52"/>
+      <text class="t-title" x="162" y="50">SLS_clients</text><text class="t-sub" x="162" y="68">klien &amp; alamat</text>
+      <rect class="nb" x="420" y="30" width="200" height="52"/>
+      <text class="t-title" x="432" y="50">SLS_projects</text><text class="t-sub" x="432" y="68">proyek &amp; lokasi</text>
+      <rect class="nb" x="690" y="30" width="200" height="52"/>
+      <text class="t-title" x="702" y="50">profiles</text><text class="t-sub" x="702" y="68">pengguna, peran, ttd</text>
+      <!-- row 2 -->
+      <rect class="nb" x="150" y="140" width="200" height="52"/>
+      <text class="t-title" x="162" y="160">SLS_lead_stakeholders</text><text class="t-sub" x="162" y="178">peran stakeholder</text>
+      <rect class="nb-a" x="420" y="140" width="200" height="52"/>
+      <text class="t-title" x="432" y="160">SLS_leads</text><text class="t-sub" x="432" y="178">prospek / lead</text>
+      <!-- row 3 -->
+      <rect class="nb" x="150" y="250" width="200" height="52"/>
+      <text class="t-title" x="162" y="270">SLS_lead_documents</text><text class="t-sub" x="162" y="288">arsip: PO, kontrak</text>
+      <rect class="nb" x="420" y="250" width="200" height="52"/>
+      <text class="t-title" x="432" y="270">sqp_product_needed</text><text class="t-sub" x="432" y="288">produk per lead</text>
+      <rect class="nb" x="690" y="250" width="200" height="52"/>
+      <text class="t-title" x="702" y="270">sqp_joint_needed</text><text class="t-sub" x="702" y="288">joint per produk</text>
+      <!-- row 4 -->
+      <rect class="nb-a" x="150" y="360" width="200" height="52"/>
+      <text class="t-title" x="162" y="380">MKT_price_quotations</text><text class="t-sub" x="162" y="398">dokumen penawaran</text>
+      <rect class="nb" x="420" y="360" width="200" height="52"/>
+      <text class="t-title" x="432" y="380">sqp_bill_of_quantities</text><text class="t-sub" x="432" y="398">BOQ 44 kolom</text>
+      <rect class="nb" x="690" y="360" width="200" height="52"/>
+      <text class="t-title" x="702" y="380">sqp_*_price_history</text><text class="t-sub" x="702" y="398">riwayat harga (auto)</text>
+      <!-- row 5 -->
+      <rect class="nb" x="150" y="470" width="200" height="52"/>
+      <text class="t-title" x="162" y="490">MKT_qoutations_approval</text><text class="t-sub" x="162" y="508">review CCO → CEO</text>
+      <rect class="nb" x="420" y="470" width="200" height="52"/>
+      <text class="t-title" x="432" y="490">PRC_vendors</text><text class="t-sub" x="432" y="508">vendor bahan baku</text>
+      <rect class="nb" x="690" y="470" width="200" height="52"/>
+      <text class="t-title" x="702" y="490">PRC_survey_harga</text><text class="t-sub" x="702" y="508">hasil survey harga</text>
+      <!-- row 6 -->
+      <rect class="nb" x="150" y="560" width="200" height="52"/>
+      <text class="t-title" x="162" y="580">labor_rates</text><text class="t-sub" x="162" y="598">upah &amp; tarif joint</text>
+      <rect class="nb" x="420" y="560" width="200" height="52"/>
+      <text class="t-title" x="432" y="580">materials + job mix</text><text class="t-sub" x="432" y="598">bahan baku &amp; mix beton</text>
+      <rect class="nb" x="690" y="560" width="200" height="52"/>
+      <text class="t-title" x="702" y="580">SLS_location_city</text><text class="t-sub" x="702" y="598">514 kota · is_java</text>
+      <!-- edges -->
+      <line class="ed" x1="250" y1="140" x2="250" y2="86" marker-end="url(#ah2)"/>
+      <text class="t-lbl" x="258" y="116">clientid</text>
+      <line class="ed" x1="420" y1="166" x2="354" y2="166" marker-end="url(#ah2)"/>
+      <text class="t-lbl" x="387" y="158" text-anchor="middle">stakeholderid</text>
+      <line class="ed" x1="520" y1="140" x2="520" y2="86" marker-end="url(#ah2)"/>
+      <text class="t-lbl" x="528" y="116">projectid</text>
+      <path class="ed" d="M 620 152 H 790 V 86" marker-end="url(#ah2)"/>
+      <text class="t-lbl" x="700" y="144">pic / createdby</text>
+      <path class="ed" d="M 420 182 H 250 V 246" marker-end="url(#ah2)"/>
+      <text class="t-lbl" x="336" y="200">arsip dokumen</text>
+      <line class="ed" x1="520" y1="192" x2="520" y2="246" marker-end="url(#ah2)"/>
+      <text class="t-lbl" x="528" y="224">leadid</text>
+      <line class="ed" x1="620" y1="276" x2="686" y2="276" marker-end="url(#ah2)"/>
+      <text class="t-lbl" x="653" y="268" text-anchor="middle">1 : n joint</text>
+      <line class="ed ed-d" x1="520" y1="302" x2="520" y2="356" marker-end="url(#ah2)"/>
+      <text class="t-lbl" x="528" y="334">konfigurasi pile</text>
+      <line class="ed ed-d" x1="790" y1="360" x2="790" y2="306" marker-end="url(#ah2)"/>
+      <text class="t-lbl" x="798" y="334">katalog harga</text>
+      <path class="ed" d="M 480 192 V 230 H 250 V 356" marker-end="url(#ah2)"/>
+      <text class="t-lbl" x="360" y="224">leadid</text>
+      <line class="ed" x1="250" y1="470" x2="250" y2="416" marker-end="url(#ah2)"/>
+      <text class="t-lbl" x="258" y="446">quotationid</text>
+      <line class="ed" x1="690" y1="496" x2="624" y2="496" marker-end="url(#ah2)"/>
+      <text class="t-lbl" x="657" y="488" text-anchor="middle">vendor_id</text>
+      <path class="ed" d="M 790 522 V 586 H 624" marker-end="url(#ah2)"/>
+      <text class="t-lbl" x="700" y="580">material_id</text>
+    </svg>
+    </div>
+    <figcaption><b>Gambar 2 — Peta relasi.</b> <span class="chip c-mut">SLS_leads</span> adalah porosnya: satu prospek menautkan klien, proyek, stakeholder, produk yang dibutuhkan, dokumen arsip, dan penawarannya. Kotak berbingkai emas = tabel poros. Nama tabel approval memang ditulis <i>qoutations</i> di sistem berjalan — ejaan ini dipertahankan agar integrasi tidak rusak.</figcaption>
+  </figure>
+
+  <h3>Ringkasan per domain</h3>
+  <div class="scrollx">
+  <table class="tbl">
+    <thead><tr><th>Domain</th><th>Tabel utama</th><th>Isi</th></tr></thead>
+    <tbody>
+      <tr><td><b>Pengguna</b></td><td class="mono">profiles (+ auth bawaan)</td><td>Akun, nama, peran, nomor telepon, path tanda tangan &amp; avatar</td></tr>
+      <tr><td><b>Penjualan</b> <span class="chip c-mut">SLS_</span></td><td class="mono">leads · projects · clients · lead_stakeholders · lead_documents · location_city · monthly_targets</td><td>Prospek sampai arsip: klien &amp; proyek, PIC per peran, dokumen, 514 kota (penanda Pulau Jawa untuk ongkir), target bulanan dengan carry-over</td></tr>
+      <tr><td><b>Penawaran</b> <span class="chip c-mut">MKT_</span></td><td class="mono">price_quotations · qoutations_approval · land_delivery_rate</td><td>Dokumen PH berversi (draft/final PDF), jejak approval CCO→CEO beserta alasan tolak, tarif ongkir darat per pabrik &amp; jarak km</td></tr>
+      <tr><td><b>Produk &amp; costing</b> <span class="chip c-mut">sqp_</span></td><td class="mono">product_needed · joint_needed · bill_of_quantities · product/joint_price_history · material_rebars</td><td>Barang jadi: konfigurasi tiang per lead, kebutuhan joint, BOQ lengkap 44 kolom, riwayat harga per konfigurasi (~328 kode produk)</td></tr>
+      <tr><td><b>Material &amp; master</b></td><td class="mono">materials · concrete_job_mix · labor_rates</td><td>Bahan baku aktif (semen, strand, pasir, split), komposisi mix per pabrik &amp; mutu, tarif upah produksi &amp; joint</td></tr>
+      <tr><td><b>Pengadaan</b> <span class="chip c-mut">PRC_</span></td><td class="mono">vendors · vendor_contacts · survey_harga</td><td>Master vendor bahan baku, kontaknya, dan harga hasil survey lapangan — domain terbaru, siap diisi</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section class="sheet" id="s05">
+  <div class="eyebrow"><b>Sheet 05</b> Alur Kerja</div>
+  <h2>Alur Kerja End-to-End</h2>
+  <p class="lead">Satu penawaran bergerak melalui empat tangan: sales, marketing, dua lapis direksi, lalu kembali ke marketing untuk pengiriman — sementara sistem mengarsipkan hasilnya secara otomatis.</p>
+
+  <figure id="fig-flow">
+    <div class="figwrap">
+    <svg class="dg" viewBox="0 0 980 252" role="img" aria-label="Alur tujuh langkah dari input prospek sampai arsip, dengan jalur penolakan dari CCO dan CEO kembali ke marketing">
+      <defs>
+        <marker id="ah3" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="mark" d="M0,0 L8,4 L0,8 z"/></marker>
+      </defs>
+      <!-- reject arcs -->
+      <path class="ed-d" d="M 499 66 C 499 38, 359 38, 359 64" marker-end="url(#ah3)"/>
+      <text class="t-lbl" x="429" y="46" text-anchor="middle">tolak CCO + alasan</text>
+      <path class="ed-d" d="M 639 66 C 639 18, 359 18, 359 58" marker-end="url(#ah3)"/>
+      <text class="t-lbl" x="499" y="26" text-anchor="middle">tolak CEO + alasan</text>
+      <!-- nodes -->
+      <g>
+        <rect class="nb" x="20" y="70" width="118" height="86"/>
+        <text class="t-role" x="30" y="88">SALES</text>
+        <text class="t-title" x="30" y="110">Input</text><text class="t-title" x="30" y="126">prospek</text>
+        <text class="t-sub" x="30" y="146">klien · proyek</text>
+      </g>
+      <g>
+        <rect class="nb" x="160" y="70" width="118" height="86"/>
+        <text class="t-role" x="170" y="88">MARKETING</text>
+        <text class="t-title" x="170" y="110">Susun harga</text><text class="t-title" x="170" y="126">&amp; margin</text>
+        <text class="t-sub" x="170" y="146">BOQ otomatis</text>
+      </g>
+      <g>
+        <rect class="nb" x="300" y="70" width="118" height="86"/>
+        <text class="t-role" x="310" y="88">MARKETING</text>
+        <text class="t-title" x="310" y="110">Draft</text><text class="t-title" x="310" y="126">penawaran</text>
+        <text class="t-sub" x="310" y="146">PDF + nomor</text>
+      </g>
+      <g>
+        <rect class="nb-a" x="440" y="70" width="118" height="86"/>
+        <text class="t-role t-role-a" x="450" y="88">DIREKTUR KOM.</text>
+        <text class="t-title" x="450" y="110">Review</text><text class="t-title" x="450" y="126">CCO</text>
+        <text class="t-sub" x="450" y="146">lapis 1</text>
+      </g>
+      <g>
+        <rect class="nb-a" x="580" y="70" width="118" height="86"/>
+        <text class="t-role t-role-a" x="590" y="88">DIREKTUR UTAMA</text>
+        <text class="t-title" x="590" y="110">Approval</text><text class="t-title" x="590" y="126">final CEO</text>
+        <text class="t-sub" x="590" y="146">lapis 2</text>
+      </g>
+      <g>
+        <rect class="nb" x="720" y="70" width="118" height="86"/>
+        <text class="t-role" x="730" y="88">MARKETING</text>
+        <text class="t-title" x="730" y="110">PDF final</text><text class="t-title" x="730" y="126">+ tanda tangan</text>
+        <text class="t-sub" x="730" y="146">kirim ke klien</text>
+      </g>
+      <g>
+        <rect class="nb" x="860" y="70" width="100" height="86"/>
+        <text class="t-role" x="870" y="88">SISTEM</text>
+        <text class="t-title" x="870" y="110">Arsip</text>
+        <text class="t-sub" x="870" y="132">tersimpan</text>
+        <text class="t-sub" x="870" y="146">per prospek</text>
+      </g>
+      <!-- forward arrows -->
+      <line class="ed" x1="138" y1="113" x2="156" y2="113" marker-end="url(#ah3)"/>
+      <line class="ed" x1="278" y1="113" x2="296" y2="113" marker-end="url(#ah3)"/>
+      <line class="ed" x1="418" y1="113" x2="436" y2="113" marker-end="url(#ah3)"/>
+      <line class="ed" x1="558" y1="113" x2="576" y2="113" marker-end="url(#ah3)"/>
+      <line class="ed" x1="698" y1="113" x2="716" y2="113" marker-end="url(#ah3)"/>
+      <line class="ed" x1="838" y1="113" x2="856" y2="113" marker-end="url(#ah3)"/>
+      <!-- status row -->
+      <text class="t-st" x="79" y="180" text-anchor="middle">lead: draft → sent_to_marketing</text>
+      <text class="t-st" x="219" y="180" text-anchor="middle">quotation: draft</text>
+      <text class="t-st" x="359" y="180" text-anchor="middle">draft (v0, v1, …)</text>
+      <text class="t-st" x="499" y="180" text-anchor="middle">requesting_approval</text>
+      <text class="t-st" x="639" y="180" text-anchor="middle">requesting_approval</text>
+      <text class="t-st" x="779" y="180" text-anchor="middle">approved → sent</text>
+      <text class="t-st" x="910" y="180" text-anchor="middle">SLS_lead_documents</text>
+      <!-- legend -->
+      <line class="ed" x1="20" y1="222" x2="52" y2="222" marker-end="url(#ah3)"/>
+      <text class="t-lbl" x="60" y="226">alur utama</text>
+      <line class="ed-d" x1="160" y1="222" x2="192" y2="222" marker-end="url(#ah3)"/>
+      <text class="t-lbl" x="200" y="226">jalur penolakan — kembali ke marketing dengan alasan, revisi jadi versi baru</text>
+    </svg>
+    </div>
+    <figcaption><b>Gambar 3 — Alur penawaran.</b> Penolakan tidak menghapus riwayat: alasan tersimpan di tabel approval, dan revisi diterbitkan sebagai versi baru (nomor versi naik dari 00 ke 01, dst.) dengan jejak lengkap.</figcaption>
+  </figure>
+</section>
+
+<section class="sheet" id="s06">
+  <div class="eyebrow"><b>Sheet 06</b> Modul M1</div>
+  <h2>Pembuatan Dokumen Penawaran</h2>
+
+  <h3>6.1 — Input prospek (Sales)</h3>
+  <p>Sales mengisi satu formulir prospek: <b>klien</b> dan <b>proyek</b> (dipilih dari master, atau dibuat baru), <b>stakeholder</b> beserta perannya, <b>pabrik asal</b> produksi (Cikarang atau Surabaya), <b>kota proyek</b> — yang otomatis menghitung jarak kirim — tipe pengiriman (mis. <i>franco</i>), masa berlaku penawaran (default 30 hari), dan <b>bahasa dokumen</b> (Indonesia atau Inggris). Setelah lengkap, prospek diteruskan ke marketing.</p>
+
+  <h3>6.2 — Pricing engine (Marketing)</h3>
+  <p>Di halaman pricing, marketing merakit konfigurasi tiang: lebar penampang, panjang, grade (A/B/C), mutu beton (K-500), arah beban (kompresi/tarik), posisi segmen (tunggal/atas/tengah/bawah), dan tipe sambungan (JHS atau Endplate). Dari konfigurasi itu, sistem menghitung sendiri <b>Bill of Quantities</b>: volume beton dari mix design pabrik, berat strand &amp; besi, pelat joint, angkur, kawat — dikali tarif upah — lalu margin per lapis dan ongkir per ton sesuai jarak. Marketing tinggal menyetujui angkanya.</p>
+
+  <figure>
+    <div class="app" role="img" aria-label="Mockup halaman pricing: daftar produk, ringkasan biaya">
+      <div class="app-bar"><i></i><i></i><i></i><span>JHS System — Penawaran / Pricing (mockup, angka contoh)</span></div>
+      <div class="app-body">
+        <nav class="app-side" aria-hidden="true">
+          <a href="#s06">Dashboard</a><a href="#s06">Daftar Prospek</a><a class="on" href="#s06">Pricing</a><a href="#s06">Harga Produk</a><a href="#s06">Profil</a>
+        </nav>
+        <div class="app-main">
+          <div class="steps">
+            <span class="step on">1 · Produk &amp; Joint</span><span class="step">2 · Margin</span><span class="step">3 · Pengiriman</span><span class="step">4 · Ajukan Approval</span>
+          </div>
+          <div class="scrollx">
+          <table class="wtable">
+            <thead><tr><th>Kode Produk</th><th>Mutu · Grade</th><th>Dimensi</th><th>Qty</th><th>Harga</th></tr></thead>
+            <tbody>
+              <tr><td class="code">SQP250_1_A_CO_BOT_EP_K500</td><td>K500 · A</td><td>25×25 cm</td><td>12 btg</td><td>Rp 143.300/m</td></tr>
+              <tr><td class="code">SQP350_9_B_TN_TOP_JHS_K500</td><td>K500 · B</td><td>35×35 cm</td><td>8 btg</td><td>Rp 201.500/m</td></tr>
+            </tbody>
+          </table>
+          </div>
+          <dl class="tiles">
+            <div class="tile"><dt>Produk Beton</dt><dd>Rp 20.635.200</dd></div>
+            <div class="tile"><dt>Joint (20 set)</dt><dd>Rp 1.552.800</dd></div>
+            <div class="tile"><dt>Ongkir franco</dt><dd>Rp 600.000</dd></div>
+            <div class="tile hot"><dt>Margin total</dt><dd>18,2%</dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <figcaption><b>Gambar 4 — Mockup pricing</b> (ilustratif, bukan tampilan final). Kode produk dan angka mengikuti format sistem yang sebenarnya.</figcaption>
+  </figure>
+
+  <h3>6.3 — Bahasa kode produk</h3>
+  <p>Setiap konfigurasi tiang punya satu kode yang bisa dibaca siapa pun yang paham kodenya — dan sistem membacanya secara konsisten di harga, BOQ, maupun dokumen:</p>
+  <div class="specstrip">
+    <div class="seg hot"><b>SQP</b><span>Square Pile — tiang persegi</span></div>
+    <div class="seg"><b>250</b><span>lebar 250 mm (25×25 cm)</span></div>
+    <div class="seg"><b>1</b><span>panjang satuan 1 m</span></div>
+    <div class="seg"><b>A</b><span>grade prestress A/B/C</span></div>
+    <div class="seg"><b>CO</b><span>beban: kompresi (CO) / tarik (TN)</span></div>
+    <div class="seg"><b>BOT</b><span>segmen: SGL / TOP / MID / BOT</span></div>
+    <div class="seg"><b>EP</b><span>joint: EP (endplate) / JHS</span></div>
+    <div class="seg"><b>K500</b><span>mutu beton K-500 (±41,5 MPa)</span></div>
+  </div>
+
+  <h3>6.4 — Nomor penawaran</h3>
+  <p>Dokumen diberi nomor baku sehingga mudah dilacak dan dirujuk di PO maupun kontrak:</p>
+  <div class="specstrip">
+    <div class="seg"><b>0002</b><span>nomor urut penawaran</span></div>
+    <div class="seg"><b>PH</b><span>Penawaran Harga</span></div>
+    <div class="seg"><b>SBP</b><span>kode perusahaan</span></div>
+    <div class="seg"><b>MKT</b><span>divisi penerbit</span></div>
+    <div class="seg hot"><b>00</b><span>versi dokumen — naik setiap revisi</span></div>
+  </div>
+
+  <h3>6.5 — Draft PDF</h3>
+  <p>Saat draft diterbitkan, jsPDF merangkai dokumen lengkap: kop, daftar produk &amp; harga, rincian joint, catatan standar (ketentuan mutu, toleransi SNI, masa berlaku), hingga total. Draft disimpan ke Storage dan tampil di penawaran sebagai berkas versi tersebut. Semua siap untuk masuk alur approval di Sheet 07.</p>
+</section>
+
+<section class="sheet" id="s07">
+  <div class="eyebrow"><b>Sheet 07</b> Modul M2</div>
+  <h2>Approval Workflow — dua lapis direksi</h2>
+  <p class="lead">Dokumen penawaran hanya sah setelah melewati dua pasang mata: Direktur Komersial memeriksa sisi harga &amp; margin, Direktur Utama memberi restu final. Setiap keputusan tercatat atas nama, waktu, dan alasannya.</p>
+
+  <figure id="fig-state">
+    <div class="figwrap">
+    <svg class="dg" viewBox="0 0 880 268" role="img" aria-label="Siklus status penawaran: draft, requesting_approval, approved, rejected, sent, terminated">
+      <defs>
+        <marker id="ah4" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="mark" d="M0,0 L8,4 L0,8 z"/></marker>
+      </defs>
+      <rect class="nb" x="30" y="120" width="150" height="44" rx="4"/>
+      <text class="t-title" x="105" y="146" text-anchor="middle">draft</text>
+      <rect class="nb-a" x="250" y="120" width="170" height="44" rx="4"/>
+      <text class="t-title" x="335" y="146" text-anchor="middle">requesting_approval</text>
+      <rect class="nb" x="490" y="52" width="140" height="44" rx="4"/>
+      <text class="t-title" x="560" y="78" text-anchor="middle">approved</text>
+      <rect class="nb" x="490" y="188" width="140" height="44" rx="4"/>
+      <text class="t-title" x="560" y="214" text-anchor="middle">rejected</text>
+      <rect class="nb" x="700" y="52" width="140" height="44" rx="4"/>
+      <text class="t-title" x="770" y="78" text-anchor="middle">sent</text>
+      <rect class="nb nb-d" x="700" y="188" width="140" height="44" rx="4"/>
+      <text class="t-title" x="770" y="214" text-anchor="middle">terminated</text>
+      <line class="ed" x1="180" y1="142" x2="246" y2="142" marker-end="url(#ah4)"/>
+      <text class="t-lbl" x="213" y="162" text-anchor="middle">ajukan</text>
+      <text class="t-lbl" x="213" y="112" text-anchor="middle">Marketing</text>
+      <line class="ed" x1="420" y1="120" x2="486" y2="84" marker-end="url(#ah4)"/>
+      <text class="t-lbl" x="452" y="88" text-anchor="middle">CCO ✓ → CEO ✓</text>
+      <line class="ed" x1="420" y1="150" x2="486" y2="198" marker-end="url(#ah4)"/>
+      <text class="t-lbl" x="452" y="190" text-anchor="middle">tolak + alasan</text>
+      <path class="ed-d" d="M 545 188 C 545 252, 105 252, 105 168" marker-end="url(#ah4)"/>
+      <text class="t-lbl" x="325" y="248" text-anchor="middle">revisi (Marketing) → versi baru</text>
+      <line class="ed" x1="630" y1="74" x2="696" y2="74" marker-end="url(#ah4)"/>
+      <text class="t-lbl" x="663" y="66" text-anchor="middle">kirim</text>
+      <line class="ed-d" x1="770" y1="96" x2="770" y2="184" marker-end="url(#ah4)"/>
+      <text class="t-lbl" x="762" y="144" text-anchor="end">dihentikan</text>
+    </svg>
+    </div>
+    <figcaption><b>Gambar 5 — Siklus status penawaran.</b> Riwayat approval tersimpan satu baris per peninjau (CCO lalu CEO) atas satu penawaran; baris CEO yang belum meninjau otomatis ditarik bila CCO menolak. Setelah terkirim, prospek berakhir di tingkat lead: <span class="chip c-ok">won</span> <span class="chip c-bad">lost</span> atau <span class="chip c-mut">closed</span>.</figcaption>
+  </figure>
+
+  <h3>Siapa mengerjakan apa</h3>
+  <div class="scrollx">
+  <table class="tbl">
+    <thead><tr><th>Tahap</th><th>Aktor</th><th>Yang diperiksa</th><th>Hasil di sistem</th></tr></thead>
+    <tbody>
+      <tr><td>Ajukan</td><td>Marketing</td><td>Kelengkapan harga, margin, dokumen draft</td><td>Status → <span class="chip c-acc">requesting_approval</span>; baris peninjau CCO dibuat</td></tr>
+      <tr><td>Lapis 1</td><td>Direktur Komersial</td><td>Margin joint &amp; produk beton, harga satuan, syarat pengiriman</td><td><span class="chip c-ok">approved</span> → baris CEO dibuka, atau <span class="chip c-bad">rejected</span> + alasan</td></tr>
+      <tr><td>Lapis 2</td><td>Direktur Utama</td><td>Penilaian komersial akhir sebelum dokumen keluar</td><td><span class="chip c-ok">approved</span> → dokumen sah, atau <span class="chip c-bad">rejected</span> + alasan</td></tr>
+      <tr><td>Revisi</td><td>Marketing</td><td>Catatan penolakan</td><td>Versi baru dengan nomor versi naik; riwayat versi lama tetap tersimpan</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section class="sheet" id="s08">
+  <div class="eyebrow"><b>Sheet 08</b> Modul M3 + M4</div>
+  <h2>Tanda Tangan Digital &amp; PDF Viewer</h2>
+  <p class="lead">Penyempurna terakhir sebelum dokumen keluar: tanda tangan direksi ditempel otomatis, dan reviewer membaca PDF yang persis sama dengan yang diterima klien.</p>
+
+  <figure id="fig-ttd">
+    <div class="figwrap">
+    <svg class="dg" viewBox="0 0 880 128" role="img" aria-label="Empat langkah tanda tangan digital: unggah PNG di profil, simpan ke bucket, tempel lewat jsPDF, jadi PDF final">
+      <defs>
+        <marker id="ah5" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="mark" d="M0,0 L8,4 L0,8 z"/></marker>
+      </defs>
+      <rect class="nb" x="20" y="36" width="180" height="56"/>
+      <text class="t-title" x="34" y="58">Profil pengguna</text>
+      <text class="t-sub" x="34" y="76">unggah tanda tangan PNG</text>
+      <rect class="nb" x="240" y="36" width="180" height="56"/>
+      <text class="t-title" x="254" y="58">Supabase Storage</text>
+      <text class="t-sub" x="254" y="76">bucket profile-signatures</text>
+      <rect class="nb" x="460" y="36" width="180" height="56"/>
+      <text class="t-title" x="474" y="58">jsPDF addImage</text>
+      <text class="t-sub" x="474" y="76">ditempel saat PDF final</text>
+      <rect class="nb-a" x="680" y="36" width="180" height="56"/>
+      <text class="t-title" x="694" y="58">PDF final</text>
+      <text class="t-sub" x="694" y="76">tertandatangani, siap kirim</text>
+      <line class="ed" x1="200" y1="64" x2="236" y2="64" marker-end="url(#ah5)"/>
+      <line class="ed" x1="420" y1="64" x2="456" y2="64" marker-end="url(#ah5)"/>
+      <line class="ed" x1="640" y1="64" x2="676" y2="64" marker-end="url(#ah5)"/>
+    </svg>
+    </div>
+    <figcaption><b>Gambar 6 — Alur tanda tangan.</b> Sekali unggah di halaman Profil, tanda tangan terpakai untuk semua penawaran berikutnya.</figcaption>
+  </figure>
+
+  <h3>Tingkat keamanan tanda tangan — jujur dan disengaja</h3>
+  <div class="note"><span class="nt">Keputusan desain</span>
+  <p>Tanda tangan digital di sini <b>sengaja dibuat sederhana</b>: gambar PNG milik akun, bukan sertifikat kriptografis. Kebutuhannya adalah penanda visual resmi pada dokumen internal, bukan pembuktian hukum. Jika suatu hari diperlukan tanda tangan terverifikasi, lapisan e-signature dapat ditambah tanpa mengubah alur approval di atas.</p></div>
+
+  <h3>PDF Viewer</h3>
+  <p>Draft dan final dibuka langsung di browser: CCO dan CEO meninjau dokumen dari halaman review masing-masing tanpa mengunduh, marketing membandingkan versi sebelum dan sesudah revisi, dan arsip memutar kembali dokumen lama kapan pun dibutuhkan. Satu dokumen, satu tampilan — tidak ada lagi versi email yang berbeda-beda.</p>
+</section>
+
+<section class="sheet" id="s09">
+  <div class="eyebrow"><b>Sheet 09</b> Modul M5</div>
+  <h2>Arsip Dokumen</h2>
+  <p class="lead">Setiap prospek punya map arsipnya sendiri: penawaran final yang sudah ditandatangani, Purchase Order dari klien, kontrak, dan dokumen lain — semuanya menempel pada prospek yang sama sehingga konteksnya tidak hilang.</p>
+  <p>Berkas tersimpan di Supabase Storage (bucket <span class="chip c-mut">documents</span>), sedangkan database menyimpan katalognya: jenis dokumen, nama berkas, ukuran, siapa yang mengunggah, dan kapan. Database menyimpan path, bukan isi berkas — sehingga daftar arsip tetap ringan dibuka.</p>
+  <h3>Jenis dokumen yang diarsipkan</h3>
+  <p><span class="chip c-ok">Purchase Order</span> &nbsp; <span class="chip c-steel">Kontrak</span> &nbsp; <span class="chip c-mut">Lainnya</span> &nbsp; — ditambah otomatis: <span class="chip c-acc">PDF penawaran final per versi</span></p>
+  <p class="small muted">Contoh isi arsip nyata: <span class="mono small">Penawaran_0002-PH-SBP-MKT-03.pdf</span>, <span class="mono small">general-tc.pdf</span> (syarat &amp; ketentuan umum terlampir).</p>
+</section>
+
+<section class="sheet" id="s10">
+  <div class="eyebrow"><b>Sheet 10</b> Status</div>
+  <h2>Status &amp; Roadmap</h2>
+  <p class="lead">Desain di atas bukan sekadar konsep — inti alurnya sudah berjalan dalam versi 0.1 dan dipakai dengan data nyata. Yang tersisa adalah melengkapi domain yang baru berdiri dan modul yang sedang disiapkan.</p>
+  <div class="scrollx">
+  <table class="tbl">
+    <thead><tr><th>Modul / Domain</th><th>Status</th><th>Catatan</th></tr></thead>
+    <tbody>
+      <tr><td><b>Pembuatan penawaran + pricing engine</b></td><td><span class="chip c-ok">Berjalan</span></td><td>BOQ, margin, ongkir, draft PDF, nomor &amp; versi — dipakai dengan data nyata</td></tr>
+      <tr><td><b>Approval CCO → CEO</b></td><td><span class="chip c-ok">Berjalan</span></td><td>Dua lapis dengan alasan tolak dan riwayat versi</td></tr>
+      <tr><td><b>Tanda tangan digital + PDF viewer</b></td><td><span class="chip c-ok">Berjalan</span></td><td>TTD PNG per pengguna, review PDF di browser</td></tr>
+      <tr><td><b>Arsip dokumen</b></td><td><span class="chip c-ok">Berjalan</span></td><td>PO, kontrak, penawaran final per prospek</td></tr>
+      <tr><td><b>Harga produk &amp; tren material</b></td><td><span class="chip c-ok">Berjalan</span></td><td>Riwayat harga otomatis + widget kurs USD/IDR &amp; harga Brent</td></tr>
+      <tr><td><b>Vendor &amp; survey harga</b></td><td><span class="chip c-steel">Baru</span></td><td>Tabel &amp; halaman sudah ada — siap diisi data vendor dan hasil survey pengadaan</td></tr>
+      <tr><td><b>Modul Laboratorium</b></td><td><span class="chip c-mut">Disiapkan</span></td><td>Peran &amp; navigasi tersedia; halaman menyusul (mix design, uji bahan)</td></tr>
+      <tr><td><b>Modul QC</b></td><td><span class="chip c-mut">Disiapkan</span></td><td>Peran &amp; navigasi tersedia; halaman menyusul (mutu produksi)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Langkah lanjutan yang disarankan</h3>
+  <p><b>1. Isi data vendor &amp; survey harga.</b> Mesin harga akan makin akurat bila harga bahan dari lapangan mengalir rutin dari pengadaan.</p>
+  <p><b>2. Bangun modul Lab &amp; QC di atas data yang sudah ada.</b> Mix design di <span class="chip c-mut">concrete_job_mix</span> dan spesifikasi besi di <span class="chip c-mut">sqp_material_rebars</span> adalah fondasi alami untuk modul Laboratorium; mutu produksi menyusul di QC.</p>
+  <p><b>3. Rawat master data.</b> Tarif upah (<span class="chip c-mut">labor_rates</span>) dan tarif ongkir (<span class="chip c-mut">MKT_land_delivery_rate</span>) adalah dua angka yang paling memengaruhi harga — keduanya perlu review berkala.</p>
+</section>
+
+<footer>
+  <div class="hatch"></div>
+  <div class="fin">
+    <span>Desain Solusi JHS System — disusun dari analisis sistem berjalan (v0.1) per 9 Oktober 2026</span>
+    <span>Dikembangkan oleh <b>Pinion</b> untuk <b>PT Saeti Beton Pracetak</b></span>
+  </div>
+</footer>
+
+</div>
